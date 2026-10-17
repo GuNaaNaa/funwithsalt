@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
     <title>funwithsalt</title>
-    <link href="https://github.com/GuNaaNaa/funwithsalt/feed.xml" rel="self" />
-    <link href="https://github.com/GuNaaNaa/funwithsalt" />
+    <link href="https://gunaanaa.github.io/funwithsalt/feed.xml" rel="self" />
+    <link href="https://gunaanaa.github.io/funwithsalt" />
     <updated>2026-10-16T19:09:06-07:00</updated>
     <author>
         <name>Frances Wong</name>
     </author>
-    <id>https://github.com/GuNaaNaa/funwithsalt</id>
+    <id>https://gunaanaa.github.io/funwithsalt</id>
 
     <entry>
         <title>OMG Salt for VCF Tools</title>
         <author>
             <name>Frances Wong</name>
         </author>
-        <link href="https://github.com/GuNaaNaa/funwithsalt/omg-salt-for-vcf-tools/"/>
-        <id>https://github.com/GuNaaNaa/funwithsalt/omg-salt-for-vcf-tools/</id>
+        <link href="https://gunaanaa.github.io/funwithsalt/omg-salt-for-vcf-tools/"/>
+        <id>https://gunaanaa.github.io/funwithsalt/omg-salt-for-vcf-tools/</id>
 
         <updated>2026-10-16T19:09:06-07:00</updated>
             <summary type="html">
