@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+    <title>funwithsalt</title>
+    <link href="https://github.com/GuNaaNaa/funwithsalt/feed.xml" rel="self" />
+    <link href="https://github.com/GuNaaNaa/funwithsalt" />
+    <updated>2026-10-16T19:09:06-07:00</updated>
+    <author>
+        <name>Frances Wong</name>
+    </author>
+    <id>https://github.com/GuNaaNaa/funwithsalt</id>
+
+    <entry>
+        <title>OMG Salt for VCF Tools</title>
+        <author>
+            <name>Frances Wong</name>
+        </author>
+        <link href="https://github.com/GuNaaNaa/funwithsalt/omg-salt-for-vcf-tools/"/>
+        <id>https://github.com/GuNaaNaa/funwithsalt/omg-salt-for-vcf-tools/</id>
+
+        <updated>2026-10-16T19:09:06-07:00</updated>
+            <summary type="html">
+                <![CDATA[
+                    We are housing and sharing individual tools built to support the VMware Salt for VCF functionality here. First up is the first static webform for building sets of Salt State and Jinja Files for each VCF Component. To programmatically manage the available VCF Configuration settings&hellip;
+                ]]>
+            </summary>
+        <content type="html">
+            <![CDATA[
+                <p>We are housing and sharing individual tools built to support the VMware Salt for VCF functionality here.</p>
+<p>First up is the first static webform for building sets of Salt State and Jinja Files for each VCF Component. To programmatically manage the available VCF Configuration settings at scale, from the Salt for VCF level, you need to know which settings are available, how those settings need to be presented to the Salt for VCF API in order for the embedded Salt infrastructure to process your request.</p>
+<p>The available <a href="https://developer.broadcom.com/xapis/vmware-salt-for-vcf-components-api/latest/" target="_blank" rel="noopener noreferrer">Salt for VCF API</a> interfaces are referenced in the official Broadcom developer portal.</p>
+<p>The available settings are also documented in the <a href="https://developer.broadcom.com/xapis/vmware-salt-for-vcf-components-api/latest/vcf_config_ids.html" target="_blank" rel="noopener noreferrer">VCF Configuration IDs</a> section.</p>
+<p>This webform can be used online for you to generate the needed Salt State and Jinja files or you can download the webform and use it offline. The webform is entirely self contained and does not need any connection to work.</p>
+            ]]>
+        </content>
+    </entry>
+</feed>

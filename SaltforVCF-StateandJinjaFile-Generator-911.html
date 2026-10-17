@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salt for VCF Component State & Jinja File Generator - 9.1.1</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .intro-text {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #90caf9;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+            align-items: flex-start;
+        }
+        .form-container {
+            flex: 1;
+            background: #ffffff;
+            padding: 25px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        .output-container {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: sticky;
+            top: 20px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .code-box {
+            background: #ffffff;
+            padding: 25px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .section-title {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+        }
+        
+        /* Collapsible State Section Styling */
+        details {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            padding: 5px 15px 15px 15px;
+        }
+        summary {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #0d47a1;
+            cursor: pointer;
+            padding: 10px 0;
+            outline: none;
+            user-select: none;
+            border-bottom: 1px solid transparent;
+        }
+        details[open] summary {
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 15px;
+        }
+        summary:hover {
+            color: #0056b3;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            padding-left: 12px;
+            border-radius: 2px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            font-size: 0.95em;
+        }
+        .description {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 8px;
+            line-height: 1.5;
+            background-color: #ffffff;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        .description code {
+            color: #495057;
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            background-color: #ffffff;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        pre {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 13px; 
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+        .btn {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            display: inline-block;
+        }
+        .btn:hover {
+            background-color: #0b5ed7;
+        }
+        .btn-success { background-color: #198754; }
+        .btn-success:hover { background-color: #157347; }
+        .btn-danger { background-color: #dc3545; }
+        .btn-danger:hover { background-color: #bb2d3b; }
+        
+        .fill-in-box {
+            background-color: #ffc107;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* Dynamic Input Overrides */
+        .dynamic-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-family: monospace;
+            margin-bottom: 5px;
+        }
+
+        /* --- Color Classes for text --- */
+        .c-stateFileName { color: #20c997; }
+        .c-keyName { color: #fd971f; }       
+        .c-keyString { color: #e6db74; }     
+        .c-importPath { color: #a6e22e; }    
+        .c-controlLabel { color: #ae81ff; }  
+        .c-controlId { color: #66d9ef; }     
+
+        /* Form Input Border Indicators */
+        .fg-stateFileName { border-left: 4px solid #20c997; }
+        .fg-keyName { border-left: 4px solid #fd971f; }
+        .fg-keyString { border-left: 4px solid #e6db74; }
+        .fg-importPath { border-left: 4px solid #a6e22e; }
+        .fg-controlLabel { border-left: 4px solid #ae81ff; }
+        .fg-controlId { border-left: 4px solid #66d9ef; }
+
+        /* Jinja Dynamic Block Styles */
+        .jinja-block {
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            position: relative;
+            background: #f8f9fa;
+        }
+        .jinja-block .form-group { margin-bottom: 15px; border-left: none; padding-left: 0; }
+        .jinja-block label { color: #495057; font-size: 0.9em; }
+
+        /* Base Syntax Highlights for Static Text */
+        .sh-jinja { color: #75715e; } 
+        .sh-key { color: #f92672; }   
+        .sh-punct { color: #f8f8f2; } 
+        .sh-comment { color: #75715e; font-style: italic; }
+        .api-filename { color: #d63384; font-weight: bold; }
+
+        /* Tooltip Hover Styles */
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin-left: auto;
+        }
+        .tooltip-container .tooltip-text {
+            visibility: hidden;
+            width: 320px;
+            background-color: #e1f5fe;
+            color: #01579b;
+            border: 1px solid #81d4fa;
+            border-radius: 6px;
+            padding: 12px;
+            position: absolute;
+            z-index: 10;
+            top: 125%; 
+            right: 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85em;
+            line-height: 1.5;
+            font-weight: normal;
+        }
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .tooltip-text ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .tooltip-text li {
+            margin-bottom: 6px;
+        }
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #81d4fa;
+            color: #01579b;
+            font-weight: bold;
+            font-family: serif;
+            font-size: 14px;
+            border: 1px solid #4fc3f7;
+        }
+        .header-flex {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>Salt for VCF Component State & Jinja File Generator - 9.1.1</h2>
+</div>
+
+<div class="container">
+    
+    <!-- Form Side (Left) -->
+    <div class="form-container" id="leftFormContainer">
+        
+        <div class="intro-text">
+            <strong>Generating Files:</strong> Each VCF component requires its own set of State and Jinja files. To quickly generate a set, select your target product from the dropdown below. This will automatically update the <strong>vcf</strong> text in the state fields to your component's name. Then simply select your configuration settings for the Jinja file.
+        </div>
+
+        <!-- Master Top-Level Component Selection -->
+        <div class="form-group" style="background: #e8f5e9; padding: 20px; border-radius: 8px; border: 2px solid #81c784; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <label for="topProductSelect" style="color: #2e7d32; font-size: 1.2em; margin-bottom: 10px;">Select a VCF Component to Configure:</label>
+            <select id="topProductSelect" onchange="handleTopProductChange()" style="font-size: 1.1em; padding: 12px; border-color: #81c784;">
+                <option value="vcenter">vCenter (Default)</option>
+                <option value="avi">AVI</option>
+                <option value="cp">Cloud Proxy</option>
+                <option value="esxi">ESX</option>
+                <option value="hcx">HCX</option>
+                <option value="nsxt_edge">NSX Edge</option>
+                <option value="nsxt_manager">NSX Manager</option>
+                <option value="vrops">Operations</option>
+                <option value="vrni">Operations for Networks</option>
+                <option value="vro">Orchestrator</option>
+                <option value="sddc_manager">SDDC Manager</option>
+                <option value="vcfa">VCF Automation</option>
+                <option value="vcf">VCFMS</option>
+                <option value="vm">VM</option>
+            </select>
+            <div class="description" style="background: transparent; border: none; padding: 0; margin-top: 8px; font-size: 0.9em;">
+                Selecting a component automatically maps the required API code (e.g. <code>nsxt_manager</code>, <code>esxi</code>) into the generated state file and filters the available Jinja settings.
+            </div>
+        </div>
+
+        <!-- Collapsible State File Section -->
+        <details id="stateConfigDetails">
+            <summary>1. VMware Salt for VCF State File (Click to Expand/Collapse)</summary>
+            
+            <div class="form-group fg-stateFileName">
+                <label for="stateFileName" class="c-stateFileName">Name of State File *</label>
+                <input type="text" id="stateFileName" value="my_vcenter_component_state_file.sls" oninput="this.value = this.value.replace(/\s+/g, '_'); generateState()">
+                <div class="description">
+                    The name of the Salt State (.sls) file to be generated.
+                </div>
+            </div>
+
+            <div class="form-group fg-keyName">
+                <label for="keyName" class="c-keyName">Key Name In This File *</label>
+                <input type="text" id="keyName" value="my_whole_vcenter_component_config" oninput="this.value = this.value.replace(/\s+/g, '_'); generateState()">
+                <div class="description">
+                    <code>#{% set key-name-in-this-file = "key-name-inside-both-files" %}</code><br><br>
+                    #Where <strong>key-name-in-this-file</strong> is a customer selected label to use as a set variable reference within this state file.
+                </div>
+            </div>
+
+            <div class="form-group fg-keyString">
+                <label for="keyString" class="c-keyString">Key Name Inside Both Files (Optional)</label>
+                <input type="text" id="keyString" value="state_to_jinja_linked_name" oninput="this.value = this.value.replace(/\s+/g, '_'); generateState()">
+                <div class="description">
+                    #Where <strong>key-name-inside-both-files</strong> is a customer selected label that is used in both a state file and a matching Jinja file.<br><br>
+                    #Link this Salt State file (containing the settings you want to target) and the Jinja file (containing the values of those settings) using this custom key you decide to use. This line is setting variable command in code.
+                </div>
+            </div>
+
+            <div class="form-group fg-importPath">
+                <label for="importPath" class="c-importPath">Path and name of Jinja file</label>
+                <input type="text" id="importPath" value="my_vcenter_component.jinja" oninput="this.value = this.value.replace(/\s+/g, '_'); generateState()">
+                <div class="description">
+                    #Insert the path location where your jinja file is located
+                </div>
+            </div>
+
+            <div class="form-group fg-controlLabel">
+                <label for="controlLabel" class="c-controlLabel">User Selected Label For Holding Jinja Content (Optional)</label>
+                <input type="text" id="controlLabel" value="control_config" oninput="this.value = this.value.replace(/\s+/g, '_'); generateState()">
+                <div class="description">
+                    <code>{% set user-selected-label = global[key-name-inside-each-file] %}</code><br>
+                    The line above tells Salt to pull the contents of the Jinja file when processing this file. This line is setting variable command in code.
+                </div>
+            </div>
+
+            <div class="form-group fg-controlId" style="margin-bottom:0;">
+                <label for="controlId" class="c-controlId">Labeling Your Settings</label>
+                <input type="text" id="controlId" value="my_vcenter_component_settings" oninput="this.value = this.value.replace(/\s+/g, '_'); generateState()">
+                <div class="description">
+                    <code>#user-selected-label:</code><br>
+                    Select any label to identify this setting check.
+                </div>
+            </div>
+        </details>
+
+        <!-- Jinja Config Section (Scroll Target) -->
+        <h3 id="jinjaSection" class="section-title">2. Jinja File Configuration</h3>
+        
+        <!-- Indicator that product has been chosen -->
+        <div id="productIndicator" style="margin-bottom: 20px; padding: 12px; background: #e3f2fd; border: 1px solid #90caf9; border-radius: 4px; color: #0d47a1; font-weight: bold; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center;">
+            <div>✅ Fields offered below are tailored for: <span>vCenter</span></div>
+            <div id="settingCountBadge" style="background: #0d47a1; color: #ffffff; padding: 2px 8px; border-radius: 12px; font-size: 0.85em;">0 Available Settings</div>
+        </div>
+
+        <div id="jinjaBlocksContainer">
+            <!-- Dynamic Jinja Blocks Will Be Injected Here -->
+        </div>
+
+        <button type="button" class="btn btn-success" onclick="addJinjaBlock()">+ Add Additional Configuration</button>
+
+    </div>
+
+    <!-- Output Side (Right) -->
+    <div class="output-container">
+
+        <!-- Salt State Output -->
+        <div class="code-box">
+            <div class="header-flex">
+                <h3 id="saltFileHeaderText" style="margin: 0;">Generated Salt State (.sls)</h3>
+                <div class="tooltip-container">
+                    <span class="info-icon">i</span>
+                    <div class="tooltip-text">
+                        <ul>
+                            <li>Variables must <strong>not</strong> contain spaces. Use underscores (<code>_</code>) or hyphens (<code>-</code>) instead.</li>
+                            <li>Fields marked with an asterisk (<strong>*</strong>) are required, however, the default label names provided can be safely used without modification.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <pre><code id="saltOutput"></code></pre>
+            <button class="btn" onclick="copyToClipboard('saltOutput')">Copy Salt State</button>
+        </div>
+
+        <!-- Jinja File Output -->
+        <div class="code-box">
+            <h3 id="jinjaFileHeader">Generated Jinja File (.jinja)</h3>
+            <pre><code id="jinjaOutput"></code></pre>
+            <button class="btn" onclick="copyToClipboard('jinjaOutput')">Copy Jinja Template</button>
+        </div>
+
+        <!-- Controls -->
+        <div style="display: flex; gap: 15px; background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <button class="btn btn-success" onclick="downloadBothFiles()">⬇ Download Both Files</button>
+            <button class="btn btn-danger" onclick="window.location.reload()">🔄 Reset Form</button>
+        </div>
+        
+        <!-- API Upload Instructions -->
+        <div class="code-box" style="margin-bottom: 30px;">
+            <h3 style="color: #0d47a1;">How to Upload your Salt for VCF State and Jinja files with the VMware Salt for VCF Component APIs</h3>
+            <div class="description" style="background: transparent; border: none; padding: 0;">
+                Follow these steps to deploy your files using the API:
+                <br><br>
+                
+                <strong>Step 1: Authenticate</strong><br>
+                Use a SSO Token to acquire your bearer token for API authorization.
+                <br><br>
+
+                <strong>Step 2: Target VCF Objects</strong><br>
+                Create a Target Group or manually target VCF objects. Follow instructions on how to create a target group or target VCF Objects manually from the TechDocs.
+                <br><br>
+
+                <strong>Step 3: Upload Jinja and State Files</strong><br>
+                Use the <code>fs.write_file</code> API method to upload your Jinja variable definitions and SLS state configuration to the Master file server.
+                <pre style="margin-top:5px; padding: 10px;"># Upload Jinja file
+curl -X POST https://&lt;raas&gt;/rpc \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -d '{"resource": "fs", "method": "write_file", "kwarg": {"path": "/<span class="api-jinja-path">my_vcenter_component.jinja</span>", "content": "&lt;base64_jinja&gt;"}}'
+
+# Upload SLS file
+curl -X POST https://&lt;raas&gt;/rpc \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -d '{"resource": "fs", "method": "write_file", "kwarg": {"path": "/<span class="api-sls-name">my_vcenter_component_state_file.sls</span>", "content": "&lt;base64_sls&gt;"}}'</pre>
+
+                <strong>Step 4: Run Assessment</strong><br>
+                Use the <code>job.run</code> API method to execute the state against your targeted minions.
+                <pre style="margin-top:5px; padding: 10px;">curl -X POST https://&lt;raas&gt;/rpc \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -d '{"resource": "job", "method": "run", "kwarg": {"target": "vcenter-minions", "fun": "state.apply", "arg": ["<span class="api-sls-base-name">my_vcenter_component_state_file</span>"]}}'</pre>
+                
+                <strong>Step 5: Monitor & Remediate</strong><br>
+                Track execution using the job status and job return API endpoints. If non-compliant items are found, execute a remediation job.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let blockCounter = 0;
+    
+    // Internal JSON state tracking for each dynamic block
+    const blockData = {};
+
+    // Complete offline array of all 304 settings
+    const rawDBData = [
+        "AVI|4401|AVI DNS server configuration",
+        "AVI|4402|AVI NTP server configuration",
+        "AVI|4403|AVI syslog LI agent configuration",
+        "AVI|4404|AVI SSH cryptography configuration audit",
+        "AVI|4405|AVI SSH service and idle timeout configuration audit",
+        "AVI|4406|AVI FIPS mode configuration",
+        "AVI|4407|AVI local OS user accounts audit",
+        "AVI|4408|AVI application accounts and RBAC role bindings audit",
+        "AVI|4409|AVI TLS 1.2+ version configuration audit",
+        "AVI|4410|AVI local account maximum password age enforcement",
+        "Cloud Proxy|4800|Cloud Proxy must be configured to use approved DNS servers.",
+        "Cloud Proxy|4801|Cloud Proxy must be configured to use approved NTP servers.",
+        "Cloud Proxy|4802|The system must enable FIPS 140-2 compliant cryptographic mode on Cloud Proxy.",
+        "Cloud Proxy|4803|Cloud Proxy local OS accounts must match the approved desired configuration.",
+        "Cloud Proxy|4804|Cloud Proxy SSH daemon must use protocol version 2 and host keys of at least 2048 bits.",
+        "Cloud Proxy|4805|Cloud Proxy SSH service must be in the correct runtime state with appropriate timeouts.",
+        "Cloud Proxy|4806|Cloud Proxy must disable TLS 1.0 and TLS 1.1 and only accept TLS 1.2 or higher.",
+        "Cloud Proxy|4807|Cloud Proxy must enforce a maximum password age of 120 days.",
+        "Cloud Proxy|4808|Cloud Proxy must enforce password complexity requirements (minimum length, character classes, history).",
+        "Cloud Proxy|4809|Cloud Proxy must enforce the limit of consecutive invalid logon attempts and the lockout duration.",
+        "Cloud Proxy|4810|Cloud Proxy must enforce a maximum password age.",
+        "ESX|3|The ESX host Secure Shell (SSH) daemon must ignore .rhosts files.",
+        "ESX|4|ESX host SSH daemon does not allow host-based authentication.",
+        "ESX|6|ESX host SSH daemon rejects authentication using an empty password",
+        "ESX|7|ESX host SSH daemon does not permit user environment settings.",
+        "ESX|11|ESX host SSH daemon performs strict mode checking of home directory configuration files",
+        "ESX|12|Disallow compression for the ESX host SSH daemon",
+        "ESX|13|ESX host SSH daemon does not contain gateway ports.",
+        "ESX|14|ESX host SSH daemon refuses X11 forwarding",
+        "ESX|16|ESX host SSH daemon refuses tunnels.",
+        "ESX|22|The ESX host must enforce password complexity.",
+        "ESX|28|Configure the ESX hosts firewall to only allow traffic from the authorized networks.",
+        "ESX|30|Show warnings in the vSphere Client if local or remote shell sessions are enabled on the ESX hosts",
+        "ESX|31|Enable Normal lockdown mode on the host",
+        "ESX|34|Set the maximum number of failed login attempts before an account is locked",
+        "ESX|38|Configure the inactivity timeout to automatically terminate idle shell sessions",
+        "ESX|43|Enable the Bridge Protocol Data Unit (BPDU) filter",
+        "ESX|105|The ESX host must configure the firewall to block incoming network traffic by default",
+        "ESX|106|The ESX host must configure the firewall to block outgoing network traffic by default",
+        "ESX|109|Configure the password history setting to restrict the reuse of passwords",
+        "ESX|111|The ESX host must be configured to disable non-essential capabilities by disabling SSH",
+        "ESX|112|Stop the ESX shell service and set the startup policy.",
+        "ESX|122|Configure the login banner for the DCUI of the ESX host",
+        "ESX|123|Configure the login banner for the SSH connections",
+        "ESX|124|The ESX host SSH daemon must be configured with an approved login banner.",
+        "ESX|125|The ESX host must verify the exception users list for lockdown mode",
+        "ESX|136|Configure a persistent log location for all locally stored logs",
+        "ESX|137|Active Directory ESX Admin group membership must not be used when adding ESX hosts to Active Directory.",
+        "ESX|138|The ESX host must disable Inter-VM transparent page sharing.",
+        "ESX|147|ESX host must configure NTP time synchronization.",
+        "ESX|148|The ESX host must configure NTP Service startup policy.",
+        "ESX|149|Start NTP service on the ESX host.",
+        "ESX|157|The ESX Image Profile and vSphere Installation Bundle (VIB) Acceptance Levels must be verified",
+        "ESX|160|All port groups on standard switches must be configured to reject forged transmits",
+        "ESX|161|All port groups on standard switches must be configured to reject guest MAC address changes.",
+        "ESX|162|All port groups on standard switches must be configured to reject guest promiscuous mode requests.",
+        "ESX|163|The ESX host must verify the DCUI.Access list",
+        "ESX|164|Configure a remote log server for the ESX hosts.",
+        "ESX|165|The ESX host must enforce an unlock timeout of certain defined minutes after a user account is locked out",
+        "ESX|166|The ESX host must disable the Managed Object Browser (MOB).",
+        "ESX|168|Set a timeout to automatically terminate idle DCUI sessions",
+        "ESX|169|Use of the dvFilter network APIs must be restricted.",
+        "ESX|179|The ESX host must produce audit records containing information to establish what type of events occurred",
+        "ESX|180|The ESX host must have kernel-level FIPS 140-2 mode enabled; enabling requires a host reimage and cannot be remediated at runtime.",
+        "ESX|181|The ESX host SSH daemon must be configured with organization-approved protocol version and host-key algorithms; changes require manual operator intervention.",
+        "ESX|183|The ESX host DNS client must be configured with organization-approved DNS servers and search domains.",
+        "ESX|184|The ESX host local OS user account list must contain only organization-approved accounts; unexpected accounts must be investigated and removed by an operator.",
+        "ESX|185|The ESX host RBAC posture must comply with organizational requirements: lockdown mode enabled, DCUI access restricted, and AD authentication configured.",
+        "ESX|186|The ESX host SSH service must be disabled or, when required, configured with organization-approved idle session and enablement timeouts.",
+        "ESX|564|ESX host must configure host client session timeout",
+        "ESX|1100|The ESX host SSH daemon must use FIPS 140-2 validated cryptographic modules to protect the confidentiality of remote access sessions.",
+        "ESX|1107|The ESX host must exclusively enable TLS 1.2 for all endpoints",
+        "ESX|1110|The ESX host must not suppress warning about unmitigated hyperthreading vulnerabilities",
+        "ESX|1111|The ESX host Secure Shell (SSH) daemon must disable port forwarding.",
+        "ESX|1114|SNMP must be configured properly on the ESX host.",
+        "ESX|1115|The ESX host must verify certificates for SSL syslog endpoints",
+        "ESX|1116|The ESX host must configure a session timeout for the vSphere API",
+        "ESX|1121|The ESX host must enable strict x509 verification for SSL syslog endpoints",
+        "ESX|1122|The ESX host must enable volatile key destruction",
+        "ESX|1123|The ESX host must be configured with an appropriate maximum password age.",
+        "ESX|1128|Configure or disable SNMP",
+        "ESX|1129|The ESX host must not enable virtual hardware management network interfaces",
+        "ESX|1130|The ESX host must transmit audit records to a remote host",
+        "ESX|1131|The ESX host must enable audit record logging",
+        "ESX|1132|The ESX host must log sufficient information for events",
+        "ESX|1133|Configure tpm based secure boot",
+        "ESX|1135|Set a timeout to limit how long the ESX Shell and SSH services are allowed to run",
+        "ESX|1139|The ESX host must not automatically grant administrative permissions to Active Directory groups",
+        "ESX|1140|ESX host must have TPM 2.0 installed and enabled for hardware-based security",
+        "ESX|1142|The ESX host must not enable log filtering",
+        "ESX|1143|ESX TLS Server Profile configuration",
+        "ESX|1145|VMware vCenter must enable vMotion live workload migration",
+        "ESX|1146|The ESX host must not disable validation of users and groups",
+        "ESX|1163|Enable UEFI Secure Boot on the host",
+        "ESX|1164|The ESX host must store one week of audit records",
+        "HCX|3701|HCX local account password policy",
+        "HCX|3702|HCX must lock out accounts for a configured duration after excessive login failures.",
+        "HCX|3703|HCX must lock out local accounts after a configured number of consecutive failed login attempts.",
+        "HCX|3704|HCX must reset the failed login counter after a configured interval.",
+        "HCX|3705|HCX must enforce password complexity requirements for local accounts.",
+        "HCX|3706|HCX must prohibit reuse of previous passwords for local accounts.",
+        "HCX|3707|HCX must forward audit logs to an approved syslog server.",
+        "HCX|3708|HCX SSH daemon must use FIPS-approved cryptographic algorithms.",
+        "HCX|3709|HCX SSH service must be configured with the correct runtime state and session idle timeout.",
+        "HCX|3710|HCX must operate in FIPS 140-2 compliant mode.",
+        "HCX|3711|HCX local OS accounts must match the approved desired configuration.",
+        "HCX|3712|HCX must restrict access to functions based on the role of the user.",
+        "HCX|3713|HCX must use TLS 1.2 or higher for all network communications.",
+        "HCX|3714|HCX must match the approved compliance profile.",
+        "HCX|3715|HCX local account passwords must be rotated within the approved interval.",
+        "HCX|3716|HCX must display an approved login warning banner to all users upon SSH login.",
+        "HCX|3717|HCX must encrypt all migration traffic.",
+        "HCX|3718|HCX appliance must be configured with the correct DNS servers.",
+        "HCX|3719|HCX appliance must be configured with authoritative NTP time sources.",
+        "HCX|3720|HCX local accounts must have a configured maximum password age.",
+        "HCX|3721|HCX must be configured with approved TLS cipher suites.",
+        "NSX Edge|2600|Validate DNS servers for NSX-T Edge nodes",
+        "NSX Edge|2601|Only approved local accounts should be present",
+        "NSX Edge|2602|NSX Components must meet minimum SSH protocol and ssh key_size",
+        "NSX Edge|2603|Validate Syslog servers for NSX-T Edge nodes",
+        "NSX Edge|2604|NSX Edge must display a SSH Login Banner Message during user login",
+        "NSX Edge|2605|NSX Edge nodes should have SSH service deactivated",
+        "NSX Edge|2606|The component must disable SNMP version 1 & 2",
+        "NSX Edge|2607|Configure LogInsight Servers.",
+        "NSX Edge|2608|Validate NTP servers for NSX-T Edge nodes",
+        "NSX Manager|1401|Configure NTP servers for NSX-T Manager nodes",
+        "NSX Manager|2400|Check if NSX Manager FIPS mode is enabled.",
+        "NSX Manager|2401|Only necessary ports should be listening on NSX manager.",
+        "NSX Manager|2402|Allow only default route on BGP peers with ToRs.",
+        "NSX Manager|2403|Configure DNS servers for NSX-T Manager nodes",
+        "NSX Manager|2404|DNS Forwarder must be disabled on NSX Gateways",
+        "NSX Manager|2405|Manage inactive webui timeout",
+        "NSX Manager|2406|uRPF mode set to 'STRICT' on Tier-0s, Tier-1s, Segments and VPC Transit Gateway Attachments",
+        "NSX Manager|2407|Only approved local accounts should be present",
+        "NSX Manager|2408|Manage NSXT SFTP server desired Config",
+        "NSX Manager|2409|NSX Manager must securely integrate with vIDM",
+        "NSX Manager|2410|NSX Manager must use valid, non-expired certificates.",
+        "NSX Manager|2411|BGP secret set to protect peering between DCF fabric and NSX-T layer",
+        "NSX Manager|2412|NSX Components must meet minimum SSH protocol and ssh key_size",
+        "NSX Manager|2414|Manage webui access security policy",
+        "NSX Manager|2415|Configure Syslog servers for the NSX-T nodes",
+        "NSX Manager|2416|NSX Manager must enforce role-based access control with approved principal-to-role mappings.",
+        "NSX Manager|2417|WebUI Secure Cipher Suite",
+        "NSX Manager|2418|The VMware Cloud Foundation NSX Manager must be configured to enforce the limit of three consecutive invalid logon attempts, after which time it must block any login attempt for 15 minutes",
+        "NSX Manager|2419|NSX must not enable DHCP unless it is required DHCP Server",
+        "NSX Manager|2420|The VMware Cloud Foundation NSX Manager must configure logging levels to ensure audit records are generated",
+        "NSX Manager|2421|NSX must disable Protocol Independent Multicast where multicast is not required",
+        "NSX Manager|2422|NSX must enable OSPF encryption",
+        "NSX Manager|2423|The VMware Cloud Foundation NSX Manager must enforce minimum password standards",
+        "NSX Manager|2424|NSX Manager local accounts must have a configurable maximum password age",
+        "NSX Manager|2425|The component must disable SNMP version 1 & 2",
+        "NSX Manager|2426|NSX Manager nodes should have SSH service deactivated",
+        "NSX Manager|2427|UI Login Banner Message",
+        "NSX Manager|2428|NSX Manager must display a SSH Login Banner Message during user login",
+        "NSX Manager|2429|NSX must not enable DHCP unless it is required - DHCP Relay",
+        "NSX Manager|2430|Configure LogInsight Servers.",
+        "SDDC Manager|1600|Verify SDDC Manager backup.",
+        "SDDC Manager|1601|SDDC Manager components must use an authoritative time source [NTP]",
+        "SDDC Manager|1603|Use an SSL certificate issued by a trusted certificate authority on the SDDC Manager.",
+        "SDDC Manager|1604|Enable/Disable lcm proxy configuration",
+        "SDDC Manager|1605|Assign least privileges to users and service accounts in SDDC Manager.",
+        "SDDC Manager|1607|Dedicate an account for downloading updates and patches in SDDC Manager.",
+        "SDDC Manager|1608|SDDC Manager must be deployed with FIPS mode enabled",
+        "SDDC Manager|1609|SDDC Manager must schedule automatic password rotation.",
+        "SDDC Manager|1612|DNS should be configured to a global value that is enforced by SDDC Manager",
+        "SDDC Manager|1613|sddc manager SYSLOG control.",
+        "SDDC Manager|1614|SDDC Manager local administrator account configuration status",
+        "vCenter|402|The vCenter Server must configure Network I/O Control (NIOC) per cluster type using vCenter tag-based detection in VCF environments.",
+        "vCenter|403|The vCenter Server must prohibit password reuse.",
+        "vCenter|404|The vCenter Server must produce audit records containing information to establish what type of events occurred.",
+        "vCenter|405|The vCenter Server must set the distributed port group Promiscuous Mode policy to reject.",
+        "vCenter|406|vCenter Server plugins must be verified.",
+        "vCenter|407|The vCenter Server must set the distributed port group MAC Address Change policy to reject.",
+        "vCenter|408|The vCenter Server passwords must meet minimum uppercase character policy.",
+        "vCenter|409|The vCenter Server must manage excessive bandwidth and Denial of Service (DoS) attacks by enabling Network I/O Control (NIOC).",
+        "vCenter|410|The vCenter Server passwords must meet minimum password length policy.",
+        "vCenter|413|The vCenter Server passwords must must meet minimum lowercase character policy.",
+        "vCenter|415|The vCenter Server users must have the correct roles assigned.",
+        "vCenter|417|The vCenter Server must only send NetFlow traffic to authorized collectors.",
+        "vCenter|418|Configure a proxy for the download of the public Hardware Compatibility List.",
+        "vCenter|420|The vCenter Server must configure the vSAN Datastore name to a unique name.",
+        "vCenter|421|The vCenter server passwords should meet max password lifetime policy.",
+        "vCenter|422|The vCenter Server must terminate management sessions after certain period of inactivity.",
+        "vCenter|427|The vCenter Server must configure the vpxuser host password meets length policy.",
+        "vCenter|428|The vCenter Server must configure the vpxuser auto-password to be changed periodically.",
+        "vCenter|432|The vCenter Server passwords must meet minimum special character policy.",
+        "vCenter|433|The vCenter Server passwords must meet minimum numeric character policy.",
+        "vCenter|434|The vCenter server should meet failed login attempts interval.",
+        "vCenter|435|The vCenter server passwords should meet max auto unlock interval policy.",
+        "vCenter|436|The vCenter server should meet max failed login attempts.",
+        "vCenter|450|The vCenter Server must set the distributed port group Forged Transmits policy to reject.",
+        "vCenter|1165|The vCenter Server must reset port configuration when virtual machines are disconnected.",
+        "vCenter|1166|The vCenter server must disable SNMPv1/2 receivers.",
+        "vCenter|1167|VMware vCenter must enable Distributed Resource Scheduler with fully automated behavior for clusters",
+        "vCenter|1168|Content libraries must have authentication method configured.",
+        "vCenter|1169|Content libraries must have security policy configured.",
+        "vCenter|1200|The vCenter Server must disable the distributed virtual switch health check.",
+        "vCenter|1201|Configure all port groups to a value different from the value of the native VLAN.",
+        "vCenter|1202|Configure all port groups to VLAN values not reserved by upstream physical switches.",
+        "vCenter|1204|The vCenter Server must enable TLS 1.2 exclusively.",
+        "vCenter|1205|The vCenter Server Machine SSL certificate must be issued by an appropriate certificate authority",
+        "vCenter|1209|Configure a logon message",
+        "vCenter|1212|Configure Mutual CHAP for vSAN iSCSI targets",
+        "vCenter|1216|vCenter must limit membership to the SystemConfiguration.BashShellAdministrators SSO group.",
+        "vCenter|1217|vCenter must limit membership to the TrustedAdmins SSO group.",
+        "vCenter|1218|The vCenter Server must be configured to send logs to a central log server.",
+        "vCenter|1219|Configure an alert to the appropriate personnel about SSO account actions.",
+        "vCenter|1220|The vCenter Server configuration must be backed up on a regular basis.",
+        "vCenter|1221|The vCenter Server must be configured to send events to a central log server.",
+        "vCenter|1222|The vCenter server must enforce SNMPv3 security features where SNMP is required.",
+        "vCenter|1225|Isolate all IP-based storage traffic on distributed switches from other traffic types",
+        "vCenter|1226|vCenter task and event retention must be set to a defined number of days.",
+        "vCenter|1227|The vCenter Server must not configure VLAN Trunking unless Virtual Guest Tagging (VGT) is required and authorized.",
+        "vCenter|1228|The vCenter Server must implement Active Directory authentication.",
+        "vCenter|1229|The vCenter Server must use LDAPS when adding an SSO identity source.",
+        "vCenter|1230|The vCenter Server must use a limited privilege account when adding an LDAP identity source.",
+        "vCenter|1246|The system must configure NTP time synchronization.",
+        "vCenter|1271|DNS should be configured to a global value that is enforced by vCenter.",
+        "vCenter|2025|Vcenter must disable ssh",
+        "vCenter|2100|The vCenter Server must disable the managed object browser (MOB) at all times when not required for troubleshooting or maintenance of managed objects",
+        "vCenter|2101|All vMotion traffic on distributed switches must be isolated from other traffic types.",
+        "vCenter|2102|Configure an alert if an error occurs with the ESXi remote syslog connection.",
+        "vCenter|2103|Manage Compliance kit configuration value for a recognized security control framework or standard",
+        "vCenter|2104|vcenter-9.vami-firewall-restrict-access - The vCenter Server must configure the firewall to only allow traffic from authorized networks.",
+        "vCenter|2105|The vCenter Server must enable FIPS-validated cryptography",
+        "vCenter|2106|VMware vCenter should enable Enhanced vMotion Compatibility for resilience and compatibility with CPU vulnerability mitigations which may cause changes in CPU microcode.",
+        "vCenter|2107|The vCenter Server must not override port group settings at the port level on distributed switches, except for block ports.",
+        "vCenter|2108|vCenter must enable High Availability for resilience to host faults",
+        "vCenter|2109|Configure the vCenter Server login banner text for access via SSH",
+        "vCenter|2110|The vCenter Server must maintain confidentiality and integrity of transmissions by enabling modern TLS ciphers",
+        "vCenter|2111|VM Must configure vm diagnostic logging",
+        "vCenter|2116|The vsan must set checksumDisabled to false",
+        "vCenter|2117|The vsan operations must reserve capacity",
+        "vCenter|2118|vCenter must send email securely",
+        "vCenter|2300|Configure Data in Transit Encryption Keys to be re-issued at regular intervals for the vSAN Data in Transit encryption enabled clusters.",
+        "vCenter|2304|Configure Automatic Rebalance for the vSAN enabled clusters.",
+        "vCenter|2305|Configure Auto Policy Management for the vSAN enabled clusters.",
+        "vCenter|2306|Configure Data at Rest Encryption Keys to be re-issued at regular intervals for the vSAN Data at Rest encryption enabled clusters.",
+        "vCenter|2307|Ensure Managed Disk Claims is disabled for the vSAN enabled clusters.",
+        "VCF Automation|4001|VCFA components must use an authoritative time source [NTP]",
+        "VCF Automation|4003|Manage Enterprise HTTP proxy configuration for VCFA",
+        "VCF Automation|4100|DNS should be configured to a global value that is enforced by VCFA",
+        "VCF Automation|4101|Manage Syslog server configuration for VCFA",
+        "VCF Automation|4102|VCFA components must use an authoritative time source [NTP]",
+        "VCF Automation|4103|Manage Enterprise HTTP proxy configuration for VCFA",
+        "VM|1137|VM console connection limits configuration",
+        "VM|1138|VM desktop auto lock configuration",
+        "VM|1144|VM disk shrink functionality configuration",
+        "VM|1147|VM copy functionality configuration",
+        "VM|1148|VM paste functionality configuration",
+        "VM|1149|VM disk wiper functionality configuration",
+        "VM|1150|VM 3D graphics support configuration",
+        "VM|1152|VM device isolation configuration",
+        "VM|1153|VM drag-and-drop functionality configuration",
+        "VM|1154|VMware Tools informational data size limit configuration",
+        "VM|1155|VM log file retention configuration",
+        "VM|1156|VM log file rotation size configuration",
+        "VM|1157|VM host information access configuration",
+        "VM|1161|VM advanced settings configuration for memory page sharing.",
+        "VM|1162|VM boot device restriction configuration",
+        "VM|1234|Encryption must be enabled for vMotion on the virtual machine.",
+        "VM|2112|Virtual machines must limit access through the dvfilter network Application Programming Interface (API)",
+        "VM|2113|Virtual machines must require encryption for Fault Tolerance",
+        "VM|2114|The guest OS must ensure that virtual machine hardware is version 19 or newer where supported",
+        "VM|2115|VM must limit PCI Device passthrough",
+        "VCFMS|4000|DNS should be configured to a global value that is enforced by VCFMS",
+        "VCFMS|4001|VCFMS components must use an authoritative time source [NTP]",
+        "VCFMS|4002|Manage Syslog server configuration for VCFMS",
+        "VCFMS|4003|Manage Enterprise HTTP proxy configuration for VCFMS",
+        "Operations for Networks|4200|The system must be configured to use approved DNS servers.",
+        "Operations for Networks|4201|The system must configure NTP time synchronization.",
+        "Operations for Networks|4202|Role-based access control bindings must match the approved desired configuration.",
+        "Operations for Networks|4203|Only approved local accounts should be present.",
+        "Operations for Networks|4204|Network Operations must forward system logs to an approved syslog server.",
+        "Operations for Networks|4209|TLS Version 1.2 or Higher on Network Operations",
+        "Operations for Networks|4210|TLS Supported Profile on Network Operations",
+        "Operations for Networks|4211|The system must use only approved SSH cryptographic algorithms.",
+        "Operations for Networks|4212|The system must operate in FIPS 140-2 compliant mode.",
+        "Operations for Networks|4213|SSH access must be configured with required timeouts on vRNI nodes",
+        "Operations for Networks|4214|Configure password policy for the system.",
+        "Operations for Networks|4215|SSH service must be enabled on vRNI nodes",
+        "Orchestrator|2900|VCF Operations Orchestrator DNS control",
+        "Orchestrator|2901|VCF Operations Orchestrator NTP control",
+        "Orchestrator|2902|VCF Operations Orchestrator SYSLOG control",
+        "Orchestrator|2903|VCF Operations Orchestrator SSH daemon must use only SSH protocol version 2 and reject host keys below the approved minimum size.",
+        "Orchestrator|2904|VCF Operations Orchestrator SSH session idle timeout must be configured to disconnect inactive sessions within the approved time limit.",
+        "Orchestrator|2905|VCF Operations Orchestrator must operate in FIPS 140-2 compliant mode with approved cryptographic modules enabled.",
+        "Orchestrator|2906|VCF Operations Orchestrator local OS accounts must match the approved desired-state list; service accounts must use a non-interactive shell.",
+        "Operations|3400|VCF Operations must enforce the limit of five consecutive invalid logon attempts by a user during a 15 minute time period",
+        "Operations|3401|VCF Operations (vROPS) must be configured to use approved DNS servers.",
+        "Operations|3402|VCF Operations must limit the number of concurrent sessions",
+        "Operations|3403|VCF Operations must enable credential ownership enforcement",
+        "Operations|3404|VCF Operations must enforce password complexity requirements",
+        "Operations|3405|VMware Cloud Foundation components must enforce a session timeout after a specified period of inactivity",
+        "Operations|3406|VCF Operations must disable unsigned management pack installation",
+        "Operations|3407|The system must enable FIPS 140-2 compliant cryptographic mode on VCF Operations (vROPS).",
+        "Operations|3409|VCF Operations (vROPS) must disable TLS 1.0 and TLS 1.1 and only accept TLS 1.2 or higher.",
+        "Operations|3410|VCF Operations (vROPS) local OS accounts must match the approved desired configuration.",
+        "Operations|3411|VCF Operations (vROPS) SSH daemon must use protocol version 2 and host keys of at least 2048 bits.",
+        "Operations|3412|VCF Operations (vROPS) SSH service must be in the correct runtime state with appropriate timeouts.",
+        "Operations|3413|VCF Operations must enforce a maximum password age of 120 days for local accounts.",
+        "Operations|3414|Assign least privileges to users and groups in VCF Operations.",
+        "Operations|3415|VCF Operations LI Agent (syslog) must forward logs to the approved Log Insight instance.",
+        "Operations|4300|VCF Operations NTP configuration"
+    ];
+
+    // Explicit Schema overlays mapping exactly to constraints
+    const explicitSchemas = {
+        "16": { type: "enum", options: ["yes", "no"], description: "Set to 'no' to disable SSH PermitTunnel." },
+        "6": { type: "enum", options: ["yes", "no"], description: "Set to 'no' to disable PermitEmptyPasswords." },
+        "31": { type: "enum", options: ["NORMAL", "DISABLED", "STRICT"], description: "Lockdown mode for the esxi host" },
+        "4": { type: "enum", options: ["yes", "no"] },
+        "11": { type: "enum", options: ["yes", "no"] },
+        "404": { type: "enum", options: ["none", "error", "warning", "info", "verbose", "trivia"] },
+        "2406": {
+            type: "object",
+            properties: {
+                "urpf_mode": { type: "enum", options: ["STRICT", "NONE"] },
+                "scope": { type: "array", items: { type: "enum", options: ["Tier-0s", "Tier-1s", "Segments", "VPC Transit Gateway Attachments"] } }
+            }
+        },
+        "1222": {
+            type: "object",
+            properties: {
+                "enable": { type: "boolean" },
+                "privacy": { type: "enum", options: ["none", "AES128", "AES192", "AES256"] },
+                "authentication": { type: "enum", options: ["none", "SHA1", "SHA256", "SHA384", "SHA512"] }
+            }
+        },
+        "4101": {
+            type: "object",
+            properties: {
+                "servers": {
+                    type: "object",
+                    properties: {
+                        "transport": { type: "enum", options: ["tls", "udp", "tcp"] }
+                    }
+                }
+            }
+        },
+        "2430": {
+            type: "object",
+            properties: {
+                "servers": {
+                    type: "array", maxItems: 1,
+                    items: {
+                        type: "object", properties: {
+                            "protocol": { type: "enum", options: ["cfapi", "flatjson", "syslog"] },
+                            "loglevel": { type: "enum", options: ["EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"] }
+                        }
+                    }
+                }
+            }
+        },
+        "4204": {
+            type: "object", properties: { "servers": { type: "array", maxItems: 1, items: { type: "object", properties: { "protocol": { type: "enum", options: ["UDP"] } } } } }
+        },
+        "2416": {
+            type: "object", properties: { "bindings": { type: "array", items: { type: "object", properties: { "type": { type: "enum", options: ["USER", "GROUP", "REMOTE"] }, "identity_source_type": { type: "enum", options: ["LDAP", "LOCAL", "VIDM"] } } } } }
+        },
+        "1212": {
+            type: "object", properties: { "global": { type: "enum", options: ["CHAP_Mutual", "CHAP", "NoAuth"] } }
+        },
+        "3712": {
+            type: "array", items: { type: "object", properties: { "type": { type: "enum", options: ["USER", "GROUP"] }, "role": { type: "enum", options: ["Migration Admin", "Migration User", "Migration Appliance Admin"] }, "identity_source_type": { type: "enum", options: ["LOCAL", "VIDM"] } } }
+        },
+        "3412": {
+            type: "object", properties: { "idle_session_timeout": { type: "number", min: 0 } }
+        },
+        "1116": { type: "number", min: 0, max: 2147483647 },
+        "30": { type: "number", min: 0, max: 1 },
+        "2405": { type: "number", min: 0, max: 86400 },
+        "38": { type: "number", min: 0, max: 86400 }
+    };
+
+    // Mappings directly from the JSON schema payloads
+    const schemaOverrides = {
+        "4408": {"local_users":[{"username":"admin","is_superuser":true,"is_active":true,"is_service_user":false,"default_tenant":"admin","access":[{"role":"System-Admin","tenant":"admin","all_tenants":false}]}]},
+        "2430": {"servers":[{"enabled":true,"host":"10.0.0.200","port":514,"protocol":"syslog","loglevel":"INFO"}]},
+        "16": "no",
+        "3412": {"enabled":false,"idle_session_timeout":600},
+        "166": false,
+        "1116": 30,
+        "3413": {"expirationConstraint":{"passwordExpirationDays":120}},
+        "31": "NORMAL",
+        "162": false,
+        "4204": {"servers":[{"ip_or_fqdn":"10.0.0.200","port":514,"protocol":"UDP"}]},
+        "6": "no",
+        "30": 0,
+        "410": 10,
+        "433": 1,
+        "4807": {"max_days":120},
+        "2402": {"allow_only_default_route":true,"include_filters":[],"exclude_filters":[]},
+        "2405": 1800,
+        "2406": {"urpf_mode":"STRICT","scope":["Tier-0s"]},
+        "3718": {"servers":[],"search_domains":[]},
+        "2403": {"servers":[]},
+        "4405": {"sshd_active":"active","client_alive_interval":300,"client_alive_count_max":0},
+        "4402": {"servers":["10.0.0.250"]},
+        "4": "no",
+        "4211": {"protocol":"2","kex_algorithms":["ecdh-sha2-nistp256","ecdh-sha2-nistp384","ecdh-sha2-nistp521"],"ciphers":["aes256-ctr","aes256-gcm@openssh.com","aes192-ctr","aes128-ctr","aes128-gcm@openssh.com"],"macs":["hmac-sha2-512","hmac-sha2-512-etm@openssh.com","hmac-sha2-256","hmac-sha2-256-etm@openssh.com"],"host_keys":[{"type":"RSA","size":2048},{"type":"ECDSA","size":256}]},
+        "2424": {"expirationConstraint":{"passwordExpirationDays":120}},
+        "2608": {"servers":[]},
+        "1115": true,
+        "407": {"__GLOBAL__":{"allow_mac_address_change":false},"ignore_disconnected_hosts":false,"ignore_host_exception":false},
+        "2901": {"servers":[]},
+        "180": true,
+        "2411": {"password_enforced":true},
+        "409": {"__GLOBAL__":{"network_io_control_status":false},"ignore_disconnected_hosts":false,"ignore_host_exception":false},
+        "436": 6,
+        "1600": {"backup_locations":[{"server":"10.0.0.200","username":"admin","directory_path":"/backup"}],"backup_schedules":[{"resource_type":"SDDC_MANAGER","take_scheduled_backups":true,"frequency":"WEEKLY","days_of_week":["SUNDAY"],"hour_of_day":0,"minute_of_hour":0,"take_backup_on_state_change":true,"retention_policy":{"number_of_most_recent_backups":1,"number_of_days_of_hourly_backups":1,"number_of_days_of_daily_backups":1}}]},
+        "4000": {"servers":[]},
+        "2600": {"servers":[]},
+        "417": {"__GLOBAL__":{"ipfix_collector_ip":"","ipfix_enabled":false},"ignore_disconnected_hosts":false,"ignore_host_exception":false},
+        "2412": {"protocol_version":"2.0","host_keys":[{"key_type":"rsa","key_size":2048}]},
+        "404": "verbose",
+        "2602": {"protocol_version":"2.0","host_keys":[{"key_type":"rsa","key_size":2048}]},
+        "2416": {"ignore_system_and_local_accounts":true,"bindings":[]},
+        "3710": {"fips_enabled":true},
+        "1612": {"is_local":true,"servers":[]},
+        "4810": {"expirationConstraint":{"passwordExpirationDays":90}},
+        "2103": "NIST-800-53",
+        "2422": {"md5_auth_enforced":true},
+        "1222": {"enable":true,"privacy":"AES256","authentication":"SHA512"},
+        "124": "The time and date of this login have been sent to the system logs.\n\nWARNING:\n   All commands run on the shell are logged and may be included in\n   support bundles. Do not provide passwords directly on the command line.\n   Most tools can prompt for secrets or accept them from standard input.\n\nVMware offers powerful and supported automation tools. Please\nsee https://developer.vmware.com for details.\n\nThe ESXi Shell can be disabled by an administrative user. See the\nvSphere Security documentation for more information.\n",
+        "4101": {"servers":{"cacert": "","host":"","port":514,"transport":"udp","insecure":true}},
+        "3708": {"protocol_version":"2.0","host_keys":[{"key_type":"rsa","key_size":2048}]},
+        "137": "",
+        "2101": {"__GLOBAL__":{"is_dedicated_vlan":true}},
+        "4214": {"complexityConstraint":{"minLength":8,"minLowercase":1,"minUppercase":1,"minNumeric":1,"minSpecial":1,"passwordHistory":5},"expirationConstraint":{"passwordExpirationDays":90},"lockoutConstraint":{"lockoutMaxAuthFailures":5,"lockoutEvaluationPeriod":120,"lockoutPeriod":300}},
+        "1143": {"tls_server_profile":"NIST_2024"},
+        "4215": {"ssh_enabled":true},
+        "2905": {"fips_enabled":true},
+        "147": {"protocol":"ntp","servers":[]},
+        "3415": {"hostname":"","port":9543,"protocol":"CFAPI"},
+        "38": 600,
+        "2900": {"servers":[]},
+        "3702": {"lockoutConstraint":{"lockoutPeriod":1800}},
+        "1221": false,
+        "3720": {"expirationConstraint":{"passwordExpirationDays":120}},
+        "4202": {"role_bindings":[]},
+        "4300": {"servers":[]},
+        "4401": {"servers":[]},
+        "434": 280,
+        "1226": {"task_cleanup_enabled":true,"task_max_age":33,"event_cleanup_enabled":true,"event_max_age":33},
+        "3719": {"servers":[]},
+        "136": {"log_location":"","is_persistent":true},
+        "1401": {"servers":[]},
+        "3411": {"protocol_version":"2.0","min_key_size":2048},
+        "1212": {"global":"CHAP_Mutual"},
+        "2408": {"backup_enabled":true,"remote_file_server":{"server":"10.1.2.3","port":22,"protocol":{"protocol_name":"sftp","authentication_scheme":{"scheme_name":"KEY","username":"admin"}},"directory_path":"/nsx-backups"},"inventory_summary_interval":300},
+        "2300": {"rekey_interval":36,"transit_encryption_enabled":true},
+        "3712": [{"name":"vsphere.local\\Administrators","type":"GROUP","role":"Migration Admin","identity_source_type":"LOCAL"}],
+        "11": "yes",
+        "122": "This system is for the use of authorized users only. Individuals using this computer system without authority or in excess of their authority are subject to having all their activities on this system monitored and recorded by system personnel. Anyone using this system expressly consents to such monitoring and is advised that if such monitoring reveals possible evidence of criminal activity system personal may provide the evidence of such monitoring to law enforcement officials.",
+        "1217": {"members":[]},
+        "406": {"plugins":[]}
+    };
+
+    // Map the original UI names to the exact required internal API codes
+    const componentCodeMap = {
+        "AVI": "avi",
+        "Cloud Proxy": "cp",
+        "ESX": "esxi",
+        "HCX": "hcx",
+        "NSX Edge": "nsxt_edge",
+        "NSX Manager": "nsxt_manager",
+        "Operations": "vrops",
+        "Operations for Networks": "vrni",
+        "Orchestrator": "vro",
+        "SDDC Manager": "sddc_manager",
+        "vCenter": "vcenter",
+        "VCF Automation": "vcfa",
+        "VM": "vm",
+        "VCFMS": "vcf"
+    };
+
+    function initializeDB() {
+        offlineControlDatabase = rawDBData.map(entry => {
+            const parts = entry.split('|');
+            const compRaw = parts[0];
+            const id = parts[1];
+            const title = parts[2];
+            
+            // Map the raw component name to the precise internal code
+            const compCode = componentCodeMap[compRaw] || compRaw.toLowerCase();
+            
+            let setting = "setting_config";
+            let value = { "key": "value" };
+            
+            // If we have an exact schema match from the JSON DB, use it
+            if (schemaOverrides[id] !== undefined) {
+                value = schemaOverrides[id];
+                
+                // Try to infer a nice short setting name based on the title keywords
+                const lowerTitle = title.toLowerCase();
+                if(lowerTitle.includes("ntp") || lowerTitle.includes("time source") || lowerTitle.includes("clocks")) {
+                    setting = "ntp";
+                } else if (lowerTitle.includes("dns")) {
+                    setting = "dns";
+                } else if (lowerTitle.includes("ssh")) {
+                    setting = "ssh";
+                } else if (lowerTitle.includes("syslog") || lowerTitle.includes("loginsight")) {
+                    setting = "syslog";
+                } else if (lowerTitle.includes("rbac") || lowerTitle.includes("role") || lowerTitle.includes("members")) {
+                    setting = "rbac";
+                } else if (lowerTitle.includes("fips")) {
+                    setting = "fips_mode";
+                } else if (lowerTitle.includes("password")) {
+                    setting = "password_policy";
+                } else if (lowerTitle.includes("lockdown")) {
+                    setting = "lockdown_mode";
+                } else if (lowerTitle.includes("backup")) {
+                    setting = "backup";
+                }
+            } 
+            // Fallbacks for items without specific schemas loaded
+            else {
+                const lowerTitle = title.toLowerCase();
+                if(lowerTitle.includes("ntp") || lowerTitle.includes("time source") || lowerTitle.includes("clocks")) {
+                    setting = "ntp";
+                    value = { "mode": "NTP", "servers": ["10.0.0.250"] };
+                } else if (lowerTitle.includes("dns")) {
+                    setting = "dns";
+                    value = { "mode": "is_static", "servers": ["10.0.0.250", "10.0.0.251"] };
+                } else if (lowerTitle.includes("ssh")) {
+                    setting = "ssh";
+                    value = { "enabled": false };
+                } else if (lowerTitle.includes("syslog") || lowerTitle.includes("loginsight")) {
+                    setting = "syslog";
+                    value = { "enabled": true, "server": "10.0.0.200", "port": 514, "protocol": "UDP" };
+                }
+            }
+
+            return { component: compCode, setting: setting, id: id, title: title, value: value };
+        });
+    }
+
+    // Convert JS Object back to YAML for the output files
+    function toYAML(obj, indent = '') {
+        if (obj === null || obj === undefined) return 'null';
+        if (typeof obj === 'boolean' || typeof obj === 'number') return obj.toString();
+        if (typeof obj === 'string') {
+            if (obj === '') return '""';
+            return `"${obj.replace(/"/g, '\\"')}"`;
+        }
+        if (Array.isArray(obj)) {
+            if (obj.length === 0) return '[]';
+            let res = '';
+            for (let item of obj) {
+                let itemStr = toYAML(item, indent + '  ');
+                if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+                    itemStr = itemStr.substring(indent.length + 2);
+                    res += `\n${indent}- ${itemStr}`;
+                } else {
+                    res += `\n${indent}- ${itemStr.trimStart()}`;
+                }
+            }
+            return res;
+        }
+        if (typeof obj === 'object') {
+            let res = '';
+            for (let key in obj) {
+                let val = obj[key];
+                if (val === undefined) continue;
+                if (typeof val === 'object' && val !== null) {
+                    if (Array.isArray(val) && val.length === 0) {
+                        res += `${indent}${key}: []\n`;
+                    } else if (Object.keys(val).length === 0) {
+                        res += `${indent}${key}: {}\n`;
+                    } else {
+                        res += `${indent}${key}:${toYAML(val, indent + '  ')}\n`;
+                    }
+                } else {
+                    res += `${indent}${key}: ${toYAML(val, indent)}\n`;
+                }
+            }
+            return res.replace(/\n$/, '');
+        }
+        return 'null';
+    }
+
+    function generateYAML(obj) {
+       let yaml = toYAML(obj, '');
+       return yaml.startsWith('\n') ? yaml.substring(1) : yaml;
+    }
+
+    function handleTopProductChange() {
+        const compCode = document.getElementById('topProductSelect').value;
+        if (!compCode) return;
+
+        document.getElementById('stateFileName').value = `my_${compCode}_component_state_file.sls`;
+        document.getElementById('keyName').value = `my_whole_${compCode}_component_config`;
+        document.getElementById('importPath').value = `my_${compCode}_component.jinja`;
+        document.getElementById('controlId').value = `my_${compCode}_component_settings`;
+
+        updateProductIndicator();
+        generateState();
+
+        document.getElementById('stateConfigDetails').open = false;
+
+        setTimeout(() => {
+            document.getElementById('jinjaSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+    }
+
+    function filterControlOptions(blockId) {
+        const searchText = document.getElementById(`search_${blockId}`).value.toLowerCase();
+        const select = document.querySelector(`#${blockId} .j-auto-select`);
+        const productCode = document.getElementById('topProductSelect').value;
+        
+        const filteredDb = offlineControlDatabase.filter(c => {
+            if (c.component !== productCode) return false;
+            if (!searchText) return true;
+            return c.id.toLowerCase().includes(searchText) || c.title.toLowerCase().includes(searchText);
+        });
+
+        let optionsHtml = `<option value="">-- Select Configuration ID --</option>`;
+        if(filteredDb.length === 0) {
+            optionsHtml += `<option value="" disabled>No matching configurations found</option>`;
+        } else {
+            filteredDb.forEach(c => {
+                const valObj = JSON.stringify({setting: c.setting, id: c.id, title: c.title}).replace(/'/g, "&apos;");
+                const shortTitle = c.title.length > 55 ? c.title.substring(0, 55) + '...' : c.title;
+                optionsHtml += `<option value='${valObj}'>${c.id} - ${shortTitle}</option>`;
+            });
+        }
+        select.innerHTML = optionsHtml;
+    }
+
+    function renderControlOptions() {
+        const productCode = document.getElementById('topProductSelect').value;
+        let optionsHtml = `<option value="">-- Select Configuration ID --</option>`;
+        
+        const filteredDb = offlineControlDatabase.filter(c => c.component === productCode);
+        
+        if(filteredDb.length === 0) {
+            optionsHtml += `<option value="" disabled>No configurations found for this component</option>`;
+        } else {
+            filteredDb.forEach(c => {
+                const valObj = JSON.stringify({setting: c.setting, id: c.id, title: c.title}).replace(/'/g, "&apos;");
+                const shortTitle = c.title.length > 55 ? c.title.substring(0, 55) + '...' : c.title;
+                optionsHtml += `<option value='${valObj}'>${c.id} - ${shortTitle}</option>`;
+            });
+        }
+        return optionsHtml;
+    }
+
+    function addJinjaBlock(isInitial = false) {
+        blockCounter++;
+        const blockId = `jinjaBlock_${blockCounter}`;
+        const container = document.getElementById('jinjaBlocksContainer');
+        
+        const div = document.createElement('div');
+        div.className = 'jinja-block';
+        div.id = blockId;
+        
+        const removeBtn = isInitial ? '' : `<button type="button" onclick="document.getElementById('${blockId}').remove(); generateState();" style="position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer; padding: 5px 10px;">X Remove</button>`;
+
+        div.innerHTML = `
+            ${removeBtn}
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>Filter Configuration IDs:</label>
+                <input type="text" id="search_${blockId}" placeholder="Type ID or keyword to filter list..." oninput="filterControlOptions('${blockId}')" style="padding: 8px; font-size: 13px; border-radius: 4px; border: 1px solid #ced4da; margin-bottom: 8px;">
+                <label>Select Configuration ID (Auto-Fill):</label>
+                <select class="j-auto-select" onchange="autoFillBlock('${blockId}')">
+                    ${renderControlOptions()}
+                </select>
+            </div>
+            <div class="form-group">
+                <label style="color: #f92672;">Setting Block Name</label>
+                <input type="text" class="j-setting" value="ntp_config" oninput="this.value = this.value.replace(/\\s+/g, '_'); generateState()">
+            </div>
+            <div class="form-group">
+                <label style="color: #66d9ef;">Configuration ID</label>
+                <input type="text" class="j-id" value="0000" oninput="generateState()">
+            </div>
+            <div class="form-group">
+                <label style="color: #e6db74;">Configuration Title</label>
+                <textarea class="j-title" rows="2" oninput="generateState()">Select a configuration ID above to auto-populate...</textarea>
+            </div>
+            <div class="form-group">
+                <label style="color: #a6e22e;">Configuration Value</label>
+                <div class="dynamic-ui-container" style="background: #ffffff; border: 1px solid #ced4da; padding: 15px; border-radius: 4px; margin-bottom: 10px;">
+                    <!-- Auto-populated form fields will go here -->
+                    <em style="color:#6c757d; font-size: 0.9em;">Select a configuration above to load form fields...</em>
+                </div>
+                <textarea class="j-value" rows="4" style="display:none;"></textarea>
+            </div>
+        `;
+        
+        container.appendChild(div);
+        
+        // Start block 1 with a default state
+        if (isInitial) {
+            blockData[blockId] = { "mode": "NTP", "servers": ["10.0.0.250"] };
+            document.querySelector(`#${blockId} .j-value`).value = generateYAML(blockData[blockId]);
+            document.querySelector(`#${blockId} .dynamic-ui-container`).innerHTML = renderSchemaNode("", null, blockData[blockId], [], blockId);
+        }
+        
+        generateState();
+    }
+
+    function autoFillBlock(blockId) {
+        const block = document.getElementById(blockId);
+        const select = block.querySelector('.j-auto-select');
+        if (!select.value) return;
+
+        const data = JSON.parse(select.value);
+        block.querySelector('.j-setting').value = data.setting;
+        block.querySelector('.j-id').value = data.id;
+        block.querySelector('.j-title').value = data.title;
+        
+        // Fetch full config object to pull the nested value JSON
+        const fullDbRecord = offlineControlDatabase.find(c => c.id === data.id && c.component === document.getElementById('topProductSelect').value);
+        
+        if (fullDbRecord) {
+            // Load state natively
+            blockData[blockId] = JSON.parse(JSON.stringify(fullDbRecord.value)); 
+            
+            // Build UI
+            const schemaOverlay = explicitSchemas[data.id] || null;
+            block.querySelector('.dynamic-ui-container').innerHTML = renderSchemaNode("", schemaOverlay, blockData[blockId], [], blockId);
+            
+            // Generate YAML Text
+            block.querySelector('.j-value').value = generateYAML(blockData[blockId]);
+        }
+        
+        generateState();
+    }
+
+    // Dynamic recursive schema rendering
+    function renderSchemaNode(key, explicitSchema, value, path, blockId) {
+        let schema = explicitSchema || {};
+        let type = schema.type;
+        
+        if (!type) {
+            if (typeof value === 'boolean') type = 'boolean';
+            else if (typeof value === 'number') type = 'number';
+            else if (Array.isArray(value)) type = 'array';
+            else if (typeof value === 'object' && value !== null) type = 'object';
+            else type = 'string';
+        }
+
+        let html = `<div style="margin-left: ${path.length > 0 ? '15px' : '0'}; border-left: ${path.length > 0 ? '2px solid #e9ecef' : 'none'}; padding-left: ${path.length > 0 ? '10px' : '0'}; margin-bottom: 10px;">`;
+
+        if (key && !key.startsWith('Item ')) {
+            html += `<label style="color: #495057; font-size: 0.9em; margin-bottom: 4px;">${key}</label>`;
+        }
+
+        const dataPath = JSON.stringify(path).replace(/"/g, '&quot;');
+
+        if (schema.options) {
+            html += `<select data-path="${dataPath}" class="dynamic-input" onchange="updateDynamicData('${blockId}', this)">`;
+            schema.options.forEach(opt => {
+                html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`;
+            });
+            html += `</select>`;
+        } else if (type === 'boolean') {
+            html += `<select data-path="${dataPath}" class="dynamic-input" onchange="updateDynamicData('${blockId}', this)">`;
+            html += `<option value="true" ${value === true || value === "true" ? 'selected' : ''}>true</option>`;
+            html += `<option value="false" ${value === false || value === "false" ? 'selected' : ''}>false</option>`;
+            html += `</select>`;
+        } else if (type === 'object') {
+            let objValue = value || {};
+            let schemaProps = schema.properties || {};
+            for (let propKey in objValue) {
+                html += renderSchemaNode(propKey, schemaProps[propKey], objValue[propKey], [...path, propKey], blockId);
+            }
+        } else if (type === 'array') {
+            let arrValue = Array.isArray(value) ? value : [];
+            let maxItems = schema.maxItems || 999;
+            html += `<div id="array_${blockId}_${path.join('_')}">`;
+            arrValue.forEach((item, index) => {
+                html += `<div style="display:flex; align-items:flex-start; margin-bottom:10px; background: #f8f9fa; padding: 10px; border: 1px solid #ced4da; border-radius: 4px;">`;
+                html += `<div style="flex-grow:1;">`;
+                html += renderSchemaNode(`Item ${index + 1}`, schema.items, item, [...path, index], blockId);
+                html += `</div>`;
+                html += `<button type="button" class="btn btn-danger" style="margin-left: 10px; padding: 4px 8px; font-size: 0.75em;" onclick="removeArrayItem('${blockId}', '${dataPath}', ${index})">Remove</button>`;
+                html += `</div>`;
+            });
+            html += `</div>`;
+            if (arrValue.length < maxItems) {
+                html += `<button type="button" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8em; margin-bottom: 5px;" onclick="addArrayItem('${blockId}', '${dataPath}')">+ Add Item</button>`;
+            }
+        } else {
+            let typeAttr = type === 'number' ? 'number' : 'text';
+            html += `<input type="${typeAttr}" data-path="${dataPath}" class="dynamic-input" value="${value !== undefined && value !== null ? String(value).replace(/"/g, '&quot;') : ''}" onchange="updateDynamicData('${blockId}', this)">`;
+            
+            let constraints = [];
+            if (schema.min !== undefined) constraints.push(`Min: ${schema.min}`);
+            if (schema.max !== undefined) constraints.push(`Max: ${schema.max}`);
+            if (constraints.length > 0) {
+                html += `<div style="font-size: 0.75em; color: #d63384; margin-top: 3px;">Restrictions: ${constraints.join(', ')}</div>`;
+            }
+        }
+        
+        if (schema.description) {
+            html += `<div style="margin-top: 5px; font-size: 0.8em; color: #6c757d; font-style: italic;">${schema.description}</div>`;
+        }
+
+        html += `</div>`;
+        return html;
+    }
+
+    function updateDynamicData(blockId, element) {
+        const path = JSON.parse(element.getAttribute('data-path'));
+        let target = blockData[blockId];
+        
+        for (let i = 0; i < path.length - 1; i++) {
+            target = target[path[i]];
+        }
+        
+        let newVal = element.value;
+        if (element.tagName === 'SELECT') {
+            if (newVal === 'true') newVal = true;
+            else if (newVal === 'false') newVal = false;
+        } else if (element.type === 'number') {
+            newVal = Number(newVal);
+        }
+
+        if (path.length > 0) {
+            target[path[path.length - 1]] = newVal;
+        } else {
+            blockData[blockId] = newVal; 
+        }
+
+        document.querySelector(`#${blockId} .j-value`).value = generateYAML(blockData[blockId]);
+        generateState();
+    }
+
+    function addArrayItem(blockId, pathStr) {
+        const path = JSON.parse(pathStr);
+        let target = blockData[blockId];
+        for (let i = 0; i < path.length; i++) {
+            target = target[path[i]];
+        }
+        
+        let newItem = "";
+        if (target.length > 0) {
+            newItem = JSON.parse(JSON.stringify(target[0])); 
+            newItem = clearValues(newItem);
+        }
+        target.push(newItem);
+        
+        const id = document.querySelector(`#${blockId} .j-id`).value;
+        const schemaOverlay = explicitSchemas[id] || null;
+        document.querySelector(`#${blockId} .dynamic-ui-container`).innerHTML = renderSchemaNode("", schemaOverlay, blockData[blockId], [], blockId);
+        document.querySelector(`#${blockId} .j-value`).value = generateYAML(blockData[blockId]);
+        generateState();
+    }
+
+    function removeArrayItem(blockId, pathStr, index) {
+        const path = JSON.parse(pathStr);
+        let target = blockData[blockId];
+        for (let i = 0; i < path.length; i++) {
+            target = target[path[i]];
+        }
+        target.splice(index, 1);
+        
+        const id = document.querySelector(`#${blockId} .j-id`).value;
+        const schemaOverlay = explicitSchemas[id] || null;
+        document.querySelector(`#${blockId} .dynamic-ui-container`).innerHTML = renderSchemaNode("", schemaOverlay, blockData[blockId], [], blockId);
+        document.querySelector(`#${blockId} .j-value`).value = generateYAML(blockData[blockId]);
+        generateState();
+    }
+
+    function clearValues(obj) {
+        if (typeof obj === 'string') return "";
+        if (typeof obj === 'number') return 0;
+        if (typeof obj === 'boolean') return false;
+        if (Array.isArray(obj)) return [];
+        if (typeof obj === 'object' && obj !== null) {
+            for (let k in obj) {
+                obj[k] = clearValues(obj[k]);
+            }
+        }
+        return obj;
+    }
+
+    function updateProductIndicator() {
+        const productSelect = document.getElementById('topProductSelect');
+        const productText = productSelect.options[productSelect.selectedIndex].text;
+        const productCode = productSelect.value;
+        
+        document.querySelector('#productIndicator span').textContent = productText;
+        
+        // Count available settings
+        const filteredDb = offlineControlDatabase.filter(c => c.component === productCode);
+        document.getElementById('settingCountBadge').textContent = `${filteredDb.length} Available Settings`;
+
+        document.querySelectorAll('.j-auto-select').forEach(select => {
+            select.innerHTML = renderControlOptions();
+        });
+    }
+
+    function extractSlsFilename(path) {
+        if (!path) return ".sls";
+        const parts = path.split('/');
+        const lastPart = parts[parts.length - 1];
+        if (lastPart && lastPart.includes('.sls')) {
+            return lastPart;
+        } else if (lastPart) {
+            return lastPart + ".sls";
+        }
+        return ".sls";
+    }
+
+    function extractJinjaFilename(path) {
+        if (!path) return ".jinja";
+        const parts = path.split('/');
+        const lastPart = parts[parts.length - 1];
+        if (lastPart && lastPart.includes('.jinja')) {
+            return lastPart;
+        } else if (lastPart) {
+            return lastPart + ".jinja";
+        }
+        return ".jinja";
+    }
+
+    function generateState() {
+        const stateFileName = document.getElementById('stateFileName').value || "my_vcenter_component_state_file.sls";
+        const keyName = document.getElementById('keyName').value || "my_whole_vcenter_component_config";
+        const keyString = document.getElementById('keyString').value || "state_to_jinja_linked_name";
+        const importPath = document.getElementById('importPath').value || "my_vcenter_component.jinja";
+        const controlLabel = document.getElementById('controlLabel').value || "control_config";
+        const controlId = document.getElementById('controlId').value || "my_vcenter_component_settings";
+        
+        const productCode = document.getElementById('topProductSelect').value || "vcenter"; 
+
+        // Handle State File Header (update text directly to avoid overriding the tooltip HTML)
+        const formattedStateName = extractSlsFilename(stateFileName);
+        const saltHeaderEl = document.getElementById('saltFileHeaderText');
+        if (saltHeaderEl) {
+            saltHeaderEl.textContent = `Generated Salt State (${formattedStateName})`;
+        }
+
+        // Handle Jinja File Header
+        const jinjaFilename = extractJinjaFilename(importPath);
+        document.getElementById('jinjaFileHeader').textContent = `Generated Jinja File (${jinjaFilename})`;
+
+        // Update API Instructions dynamically
+        document.querySelectorAll('.api-sls-name').forEach(el => el.textContent = formattedStateName);
+        document.querySelectorAll('.api-sls-base-name').forEach(el => el.textContent = formattedStateName.replace('.sls', ''));
+        document.querySelectorAll('.api-jinja-path').forEach(el => el.textContent = importPath);
+
+        const kn = `<span class="c-keyName" style="font-weight:bold;">${keyName}</span>`;
+        const ks = `<span class="c-keyString" style="font-weight:bold;">${keyString}</span>`;
+        const ip = `<span class="c-importPath" style="font-weight:bold;">${importPath}</span>`;
+        const cl = `<span class="c-controlLabel" style="font-weight:bold;">${controlLabel}</span>`;
+        const ci = `<span class="c-controlId" style="font-weight:bold;">${controlId}</span>`;
+        const pn = `<span class="c-productName" style="font-weight:bold;">${productCode}</span>`;
+
+        const saltTemplateHTML = `<span class="sh-comment"># Save this file to: ${formattedStateName}</span>
+
+<span class="sh-jinja">{% set</span> ${kn} = <span class="sh-punct">"</span>${ks}<span class="sh-punct">"</span> <span class="sh-jinja">%}</span>
+
+<span class="sh-jinja">{% from</span> <span class="sh-punct">'</span>${ip}<span class="sh-punct">'</span> <span class="sh-jinja">import global with context %}</span> <span class="sh-comment">#Insert the path location where your jinja file is located</span>
+<span class="sh-jinja">{% set</span> ${cl} = global[${kn}] <span class="sh-jinja">%}</span>
+
+<span class="sh-jinja">{% set</span> target_control_config = {<span class="sh-punct">"</span>${ks}<span class="sh-punct">"</span>: ${cl} } <span class="sh-jinja">%}</span>
+
+${ci}:
+  <span class="sh-key">vmware_compliance_control.check_control</span>:
+    <span class="sh-key">- control_config</span>: <span class="sh-jinja">{{</span> target_control_config <span class="sh-jinja">}}</span>
+    <span class="sh-key">- product</span>: <span class="sh-punct">"</span>${pn}<span class="sh-punct">"</span>`;
+
+        const saltBox = document.getElementById('saltOutput');
+        if (saltBox) saltBox.innerHTML = saltTemplateHTML;
+
+        let jinjaBlocksStr = "";
+        document.querySelectorAll('.jinja-block').forEach((block) => {
+            const setting = block.querySelector('.j-setting').value || "setting";
+            const id = block.querySelector('.j-id').value || "0000";
+            const title = block.querySelector('.j-title').value || "Title";
+            const val = block.querySelector('.j-value').value || "";
+            const indentedValue = val.split('\n').map(line => '      ' + line).join('\n');
+
+            jinjaBlocksStr += `  <span class="sh-key">${setting}</span>:
+    <span class="sh-key">metadata</span>:
+      <span class="sh-key">configuration_id</span>: <span class="sh-punct">"</span><span class="fill-in-box">${id}</span><span class="sh-punct">"</span>
+      <span class="sh-key">configuration_title</span>: <span class="sh-punct">"</span><span class="fill-in-box">${title}</span><span class="sh-punct">"</span>
+    <span class="sh-key">value</span>:
+${indentedValue}\n\n`;
+        });
+
+        const jinjaTemplateHTML = `<span class="sh-comment">{# Save this file to: ${importPath} #}</span>
+
+<span class="sh-jinja">{% load_yaml as global %}</span>
+<span class="sh-key">${ks}</span>:
+${jinjaBlocksStr}<span class="sh-jinja">{% endload %}</span> <span class="sh-comment"># Required for Salt to process Jinja file properly.</span>`;
+
+        const jinjaBox = document.getElementById('jinjaOutput');
+        if (jinjaBox) jinjaBox.innerHTML = jinjaTemplateHTML;
+    }
+
+    function copyToClipboard(elementId) {
+        const text = document.getElementById(elementId).textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Code copied to clipboard!");
+        }).catch(err => {
+            alert("Failed to copy. Please manually highlight and copy the code.");
+        });
+    }
+
+    function downloadBothFiles() {
+        const saltText = document.getElementById('saltOutput').textContent;
+        const jinjaText = document.getElementById('jinjaOutput').textContent;
+        
+        const saltName = extractSlsFilename(document.getElementById('stateFileName').value);
+        const jinjaName = extractJinjaFilename(document.getElementById('importPath').value);
+
+        triggerDownload(saltName, saltText);
+        setTimeout(() => { triggerDownload(jinjaName, jinjaText); }, 500);
+    }
+
+    function triggerDownload(filename, text) {
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeDB();
+        updateProductIndicator();
+        
+        const saltName = extractSlsFilename(document.getElementById('stateFileName').value);
+        const headerFlexHTML = `<div class="header-flex">
+                <h3 id="saltFileHeaderText" style="margin: 0;">Generated Salt State (${saltName})</h3>
+                <div class="tooltip-container">
+                    <span class="info-icon">i</span>
+                    <div class="tooltip-text">
+                        <ul>
+                            <li>Variables must <strong>not</strong> contain spaces. Use underscores (<code>_</code>) or hyphens (<code>-</code>) instead.</li>
+                            <li>Fields marked with an asterisk (<strong>*</strong>) are required, however, the default label names provided can be safely used without modification.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>`;
+            
+        const oldHeader = document.getElementById('saltFileHeaderText');
+        if (oldHeader && oldHeader.parentElement.className !== 'header-flex') {
+            oldHeader.outerHTML = headerFlexHTML;
+        }
+
+        addJinjaBlock(true); 
+    });
+</script>
+
+</body>
+</html>

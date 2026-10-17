@@ -1,0 +1,27 @@
+{
+    "version": "https://jsonfeed.org/version/1",
+    "title": "funwithsalt",
+    "description": "",
+    "home_page_url": "https://github.com/GuNaaNaa/funwithsalt",
+    "feed_url": "https://github.com/GuNaaNaa/funwithsalt/feed.json",
+    "user_comment": "",
+    "author": {
+        "name": "Frances Wong"
+    },
+    "items": [
+        {
+            "id": "https://github.com/GuNaaNaa/funwithsalt/omg-salt-for-vcf-tools/",
+            "url": "https://github.com/GuNaaNaa/funwithsalt/omg-salt-for-vcf-tools/",
+            "title": "OMG Salt for VCF Tools",
+            "summary": "We are housing and sharing individual tools built to support the VMware Salt for VCF functionality here. First up is the first static webform for building sets of Salt State and Jinja Files for each VCF Component. To programmatically manage the available VCF Configuration settings&hellip;",
+            "content_html": "<p>We are housing and sharing individual tools built to support the VMware Salt for VCF functionality here.</p>\n<p>First up is the first static webform for building sets of Salt State and Jinja Files for each VCF Component. To programmatically manage the available VCF Configuration settings at scale, from the Salt for VCF level, you need to know which settings are available, how those settings need to be presented to the Salt for VCF API in order for the embedded Salt infrastructure to process your request.</p>\n<p>The available <a href=\"https://developer.broadcom.com/xapis/vmware-salt-for-vcf-components-api/latest/\" target=\"_blank\" rel=\"noopener noreferrer\">Salt for VCF API</a> interfaces are referenced in the official Broadcom developer portal.</p>\n<p>The available settings are also documented in the <a href=\"https://developer.broadcom.com/xapis/vmware-salt-for-vcf-components-api/latest/vcf_config_ids.html\" target=\"_blank\" rel=\"noopener noreferrer\">VCF Configuration IDs</a> section.</p>\n<p>This webform can be used online for you to generate the needed Salt State and Jinja files or you can download the webform and use it offline. The webform is entirely self contained and does not need any connection to work.</p>",
+            "author": {
+                "name": "Frances Wong"
+            },
+            "tags": [
+            ],
+            "date_published": "2026-10-16T19:09:06-07:00",
+            "date_modified": "2026-10-16T19:09:06-07:00"
+        }
+    ]
+}
