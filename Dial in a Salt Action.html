@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dial in a Salt Action</title>
+<style>
+  :root{
+    --ink:#1B2A4A; --muted:#4A5866; --line:#E3E8EF; --red:#D3212C; --black:#111;
+    --r1:#AACAEA; --r2:#BDE5DE; --r3:#C3B2E6; --r4:#F4C29A;
+    --font: Calibri, Carlito, "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#fff;color:var(--ink);font-family:var(--font)}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 40px;display:grid;grid-template-columns:minmax(320px,1.15fr) minmax(300px,1fr);gap:36px;align-items:start}
+  @media (max-width:860px){.wrap{grid-template-columns:1fr;gap:16px}}
+  .dial-box{position:relative}
+  svg#dial{width:100%;height:auto;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+  .ring{cursor:grab;outline:none}
+  .ring.dragging{cursor:grabbing}
+  .ring .seg{stroke:#fff;stroke-width:2;transition:filter .15s}
+  .ring .seg.sel{stroke:var(--ink);stroke-width:2.5}
+  .ring:hover .seg,.ring:focus-visible .seg{filter:brightness(.97)}
+  .ring:focus-visible .halo{stroke:var(--ink);stroke-dasharray:4 4}
+  .halo{fill:none;stroke:transparent;stroke-width:1.5;pointer-events:none}
+  .ring text{font-family:var(--font);fill:var(--ink);pointer-events:none}
+  .cat{font-weight:700;font-size:17.5px}
+  .ven{font-size:13px;fill:var(--muted)!important}
+  .one{font-weight:700;font-size:19px}
+  .one.sm{font-size:16.5px}
+  .tick{stroke-linecap:round;pointer-events:none}
+  #core{transform-box:fill-box;transform-origin:center}
+  #core.pulse{animation:pulse .9s ease-out 2}
+  @keyframes pulse{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+  .hint{text-align:center;color:var(--muted);font-size:14px;margin:6px 0 0}
+
+  h1{font-size:34px;line-height:1.1;margin:8px 0 8px}
+  .lede{color:var(--muted);font-size:16px;line-height:1.45;margin:0 0 22px}
+  form{margin:0}
+  .step{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;padding:12px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:#fff;transition:border-color .2s, box-shadow .2s}
+  .step.active{border-color:#9DB3CC;box-shadow:0 2px 10px rgba(27,42,74,.08)}
+  .chip{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;color:var(--ink)}
+  .step.done .chip::after{content:"✓"}
+  .step.done .chip span{display:none}
+  .step label{display:block;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+  .step output{display:block;font-size:18px;font-weight:700;line-height:1.2}
+  .step .sub{display:block;font-size:13px;color:var(--muted);min-height:1em}
+  .turn{display:flex;gap:6px}
+  .turn button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:#F6F8FB;color:var(--ink);font-size:16px;cursor:pointer;font-family:var(--font)}
+  .turn button:hover{background:#EBF0F6}
+  .turn button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .btn{border-radius:10px;padding:11px 18px;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--font);border:1px solid var(--line);background:#fff;color:var(--ink)}
+  .btn.primary{background:var(--black);border-color:var(--black);color:#fff}
+  .btn.primary:disabled{background:#9AA3AE;border-color:#9AA3AE;cursor:not-allowed}
+  .result{margin-top:18px;padding:16px 18px;border-radius:12px;background:#FDF1F1;border:1px solid #F3C9CB;display:none}
+  .result.show{display:block}
+  .result h2{margin:0 0 6px;font-size:18px;color:var(--red)}
+  .result p{margin:0 0 10px;font-size:15px;line-height:1.45}
+  .result .note{font-size:13px;color:var(--muted);margin:8px 0 0}
+  .foot{color:#687888;font-size:13px;margin-top:22px}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="dial-box" aria-label="Combination dial">
+    <svg id="dial" viewBox="-330 -362 660 680" role="group" aria-label="Four nested dials. Drag a ring, or focus it and use the arrow keys."></svg>
+    <p class="hint">Drag a ring to turn it, or use the arrow buttons. Each dial clicks into place under the black pointer.</p>
+  </section>
+
+  <section>
+    <h1>Dial in a Salt Action</h1>
+    <p class="lede">Turn each dial until your choice sits under the pointer, starting with the outer dial and working in.</p>
+    <form id="combo" novalidate>
+      <div id="steps"></div>
+      <div class="actions">
+        <button class="btn primary" id="setBtn" type="submit" disabled>Set combination</button>
+        <button class="btn" id="resetBtn" type="button">Reset dials</button>
+      </div>
+      <div class="result" id="result" role="status" aria-live="polite">
+        <h2>Unlocked: Salt Actions</h2>
+        <p id="summary"></p>
+        <button class="btn" id="copyBtn" type="button">Copy combination</button>
+        <p class="note">This page is a preview. It isn't connected to Salt and doesn't run anything.</p>
+      </div>
+    </form>
+    <p class="foot">Events &nbsp;•&nbsp; Remediation &nbsp;•&nbsp; Auditability</p>
+  </section>
+</main>
+
+<script>
+(() => {
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("dial");
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const rad = d => d * Math.PI / 180;
+const pt = (r, a) => [r * Math.cos(rad(a)), r * Math.sin(rad(a))];
+const mod = (x, m) => ((x % m) + m) % m;
+
+const DIALS = [
+  { key:"category", title:"System category", rOut:296, rIn:224, tick:"#5C7FA8", chip:"#AACAEA", start:18,
+    segs:[ ["Threat protection","CrowdStrike · Microsoft Defender","#DCE8F6"],
+           ["Security analytics","Splunk · Microsoft Sentinel","#C3D8EF"],
+           ["Vulnerability management","Qualys · Tenable","#DCE8F6"],
+           ["Identity and access","CyberArk · Okta","#C3D8EF"],
+           ["Service management","ServiceNow · Jira Service Management","#AACAEA"] ] },
+  { key:"workflow", title:"Workflow step", rOut:219, rIn:167, tick:"#3F8C80", chip:"#BDE5DE", start:105,
+    segs:[ ["Recommend",null,"#D5EFEA"],["Approve",null,"#BDE5DE"],["Orchestrate",null,"#D5EFEA"],["Verify results",null,"#BDE5DE"] ] },
+  { key:"target", title:"Target", rOut:162, rIn:114, tick:"#6E5AA6", chip:"#C3B2E6", start:30,
+    segs:[ ["Infrastructure",null,"#E6DFF5"],["Workloads",null,"#D4C8EE"],["Modern Apps",null,"#C3B2E6"] ] },
+  { key:"loop", title:"Core loop", rOut:109, rIn:66, tick:"#B4733A", chip:"#F4C29A", start:150,
+    segs:[ ["Assess",null,"#FCE6D3"],["Remediate",null,"#F8D4B6"],["Protect",null,"#F4C29A"] ] },
+];
+
+const defs = el("defs", {}, svg);
+let uid = 0;
+
+function sectorPath(rO, rI, a0, a1) {
+  const [x0,y0]=pt(rO,a0),[x1,y1]=pt(rO,a1),[x2,y2]=pt(rI,a1),[x3,y3]=pt(rI,a0);
+  const large = (a1 - a0) > 180 ? 1 : 0;
+  return `M${x0},${y0} A${rO},${rO} 0 ${large} 1 ${x1},${y1} L${x2},${y2} A${rI},${rI} 0 ${large} 0 ${x3},${y3} Z`;
+}
+function arcPath(r, a0, a1, cw) {           // cw: drawn a0→a1 clockwise; else a1→a0 counter-clockwise
+  const large = Math.abs(a1 - a0) > 180 ? 1 : 0;
+  if (cw) { const [x0,y0]=pt(r,a0),[x1,y1]=pt(r,a1); return `M${x0},${y0} A${r},${r} 0 ${large} 1 ${x1},${y1}`; }
+  const [x0,y0]=pt(r,a1),[x1,y1]=pt(r,a0); return `M${x0},${y0} A${r},${r} 0 ${large} 0 ${x1},${y1}`;
+}
+// One curved line of text; keeps two paths (clockwise for the top half, counter-clockwise for the bottom) so it can stay upright.
+function curvedLine(g, text, cls, rCenter, a0, a1, lineOffset, fs) {
+  const pad = 2;
+  const idUp = "p" + (uid++), idDn = "p" + (uid++);
+  // top orientation: glyphs grow outward from baseline; bottom: grow inward
+  el("path", { id:idUp, d: arcPath(rCenter + lineOffset - 0.33*fs, a0 - 40, a1 + 40, true) }, defs);
+  el("path", { id:idDn, d: arcPath(rCenter - lineOffset + 0.33*fs, a0 - 40, a1 + 40, false) }, defs);
+  const t = el("text", { class: cls, "text-anchor":"middle" }, g);
+  const tp = el("textPath", { href:"#"+idUp, startOffset:"50%" }, t);
+  tp.textContent = text;
+  return { tp, idUp, idDn };
+}
+
+const state = DIALS.map(() => ({ rot: 0, moved: false }));
+const rings = [];
+
+DIALS.forEach((d, di) => {
+  const g = el("g", { class:"ring", tabindex:"0", role:"slider", "aria-label": `Dial ${di+1}: ${d.title}`, "data-i": di }, svg);
+  const n = d.segs.length, span = 360 / n, gap = 0.7;
+  const rm = (d.rOut + d.rIn) / 2 - 3;
+  const segs = [], labels = [];
+  el("circle", { class:"halo", r: d.rOut + 2 }, g);
+  d.segs.forEach(([main, sub, color], i) => {
+    const a0 = d.start + i*span, a1 = a0 + span;
+    segs.push(el("path", { class:"seg", d: sectorPath(d.rOut, d.rIn, a0+gap, a1-gap), fill: color, "data-i": di }, g));
+    const lines = [];
+    if (sub) {
+      lines.push(curvedLine(g, main, "cat", rm, a0, a1, 10, 17.5));
+      lines.push(curvedLine(g, sub, "ven", rm, a0, a1, -12, 13));
+    } else {
+      const fs = d.rOut < 120 ? 16.5 : 19;
+      lines.push(curvedLine(g, main, "one" + (fs < 19 ? " sm" : ""), rm, a0, a1, 0, fs));
+    }
+    labels.push({ mid: (a0 + a1) / 2, lines, up: true });
+  });
+  // Master Lock–style graduations (turn with the dial)
+  for (let k = 0; k < 40; k++) {
+    const a = d.start + k * 9, major = k % 5 === 0;
+    const r2 = d.rOut - 3, r1 = r2 - (major ? 11 : 5.5);
+    const [x1,y1] = pt(r1,a), [x2,y2] = pt(r2,a);
+    el("line", { class:"tick", x1, y1, x2, y2, stroke: d.tick, "stroke-width": major ? 2 : 1 }, g);
+  }
+  rings.push({ g, segs, labels, span, d });
+});
+
+// Center
+const core = el("g", { id:"core" }, svg);
+el("circle", { r:60, fill:"#D3212C", stroke:"#fff", "stroke-width":3 }, core);
+el("text", { y:-3, "text-anchor":"middle", "font-size":19, "font-weight":700, fill:"#fff", "font-family":"inherit" }, core).textContent = "Salt";
+el("text", { y:19, "text-anchor":"middle", "font-size":19, "font-weight":700, fill:"#fff", "font-family":"inherit" }, core).textContent = "Actions";
+
+// Fixed pointer + index notches
+const tri = (y, w, h) => el("path", { d:`M${-w/2},${y} L${w/2},${y} L0,${y+h} Z`, fill:"#111", "pointer-events":"none" }, svg);
+tri(-338, 40, 34);
+DIALS.slice(1).forEach(d => tri(-d.rOut - 3, 15, 12));
+
+// ---------- State / rendering ----------
+const selectedIndex = ri => { const r = rings[ri]; return mod(Math.round((270 - r.d.start - state[ri].rot) / r.span - 0.5), r.d.segs.length); };
+
+function render(ri) {
+  const r = rings[ri], rot = state[ri].rot;
+  r.g.setAttribute("transform", `rotate(${rot})`);
+  r.labels.forEach(lb => {
+    const abs = mod(lb.mid + rot, 360);
+    const up = !(abs > 0 && abs < 180);
+    if (up !== lb.up) { lb.up = up; lb.lines.forEach(l => l.tp.setAttribute("href", "#" + (up ? l.idUp : l.idDn))); }
+  });
+  const sel = selectedIndex(ri);
+  r.segs.forEach((s, i) => s.classList.toggle("sel", i === sel && Math.abs(offTop(ri)) < 2));
+  const [main, sub] = r.d.segs[sel];
+  r.g.setAttribute("aria-valuetext", main);
+  updateForm();
+}
+// how far (deg) the nearest segment centre is from 12 o'clock
+function offTop(ri) { const r = rings[ri]; const i = selectedIndex(ri); const mid = r.d.start + (i + .5) * r.span + state[ri].rot; let o = mod(mid - 270 + 180, 360) - 180; return o; }
+
+function animateTo(ri, target, ms = 380) {
+  const from = state[ri].rot, t0 = performance.now();
+  cancelAnimationFrame(rings[ri].raf);
+  const step = now => {
+    const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+    state[ri].rot = from + (target - from) * e; render(ri);
+    if (k < 1) rings[ri].raf = requestAnimationFrame(step); else afterSnap(ri);
+  };
+  rings[ri].raf = requestAnimationFrame(step);
+}
+function snap(ri) { animateTo(ri, state[ri].rot - offTop(ri), 260); }
+function stepDial(ri, dir) {            // dir +1 = clockwise one segment
+  const base = state[ri].rot - offTop(ri);
+  state[ri].moved = true; activeStep(ri);
+  animateTo(ri, base + dir * rings[ri].span);
+}
+function afterSnap(ri) { render(ri); checkDone(); }
+
+// ---------- Drag ----------
+let drag = null;
+function svgAngle(evt) {
+  const p = svg.createSVGPoint(); p.x = evt.clientX; p.y = evt.clientY;
+  const q = p.matrixTransform(svg.getScreenCTM().inverse());
+  return { a: Math.atan2(q.y, q.x) * 180 / Math.PI, r: Math.hypot(q.x, q.y) };
+}
+svg.addEventListener("pointerdown", e => {
+  const { a, r } = svgAngle(e);
+  const ri = DIALS.findIndex(d => r <= d.rOut + 2 && r >= d.rIn - 2);
+  if (ri < 0) return;
+  cancelAnimationFrame(rings[ri].raf);
+  drag = { ri, last: a, id: e.pointerId };
+  rings[ri].g.classList.add("dragging"); rings[ri].g.focus({ preventScroll:true });
+  svg.setPointerCapture(e.pointerId);
+  activeStep(ri);
+  e.preventDefault();
+});
+svg.addEventListener("pointermove", e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const { a } = svgAngle(e);
+  let delta = a - drag.last; delta = mod(delta + 180, 360) - 180;
+  drag.last = a;
+  state[drag.ri].rot += delta; state[drag.ri].moved = true;
+  render(drag.ri);
+});
+const endDrag = e => { if (!drag) return; rings[drag.ri].g.classList.remove("dragging"); snap(drag.ri); drag = null; };
+svg.addEventListener("pointerup", endDrag);
+svg.addEventListener("pointercancel", endDrag);
+
+// Keyboard on the dial itself
+rings.forEach((r, ri) => r.g.addEventListener("keydown", e => {
+  if (["ArrowRight","ArrowUp"].includes(e.key)) { stepDial(ri, +1); e.preventDefault(); }
+  if (["ArrowLeft","ArrowDown"].includes(e.key)) { stepDial(ri, -1); e.preventDefault(); }
+}));
+
+// ---------- Form ----------
+const stepsBox = document.getElementById("steps");
+const fields = DIALS.map((d, i) => {
+  const row = document.createElement("div");
+  row.className = "step"; row.id = "step" + i;
+  row.innerHTML = `<div class="chip" style="background:${d.chip}"><span>${i+1}</span></div>
+    <div><label for="out${i}">${["Outer","Second","Third","Fourth"][i]} dial · ${d.title}</label>
+    <output id="out${i}" name="${d.key}"></output><span class="sub" id="sub${i}"></span></div>
+    <div class="turn"><button type="button" aria-label="Turn ${d.title} dial counter-clockwise">↺</button>
+    <button type="button" aria-label="Turn ${d.title} dial clockwise">↻</button></div>`;
+  stepsBox.appendChild(row);
+  const [ccw, cw] = row.querySelectorAll("button");
+  ccw.addEventListener("click", () => stepDial(i, -1));
+  cw.addEventListener("click", () => stepDial(i, +1));
+  return { row, out: row.querySelector("output"), sub: row.querySelector(".sub") };
+});
+function activeStep(ri) { fields.forEach((f, i) => f.row.classList.toggle("active", i === ri)); }
+function current() { return DIALS.map((d, i) => d.segs[selectedIndex(i)]); }
+function updateForm() {
+  current().forEach(([main, sub], i) => {
+    fields[i].out.textContent = main; fields[i].sub.textContent = sub || "";
+    fields[i].row.classList.toggle("done", state[i].moved);
+  });
+  document.getElementById("setBtn").disabled = !state.every(s => s.moved);
+}
+let wasDone = false;
+function checkDone() {
+  const done = state.every(s => s.moved);
+  if (done && !wasDone) { core.classList.remove("pulse"); void core.getBBox(); core.classList.add("pulse"); }
+  wasDone = done;
+}
+const summaryText = () => { const c = current(); return `${c[0][0]} (${c[0][1]}) → ${c[1][0]} → ${c[2][0]} → ${c[3][0]}`; };
+document.getElementById("combo").addEventListener("submit", e => {
+  e.preventDefault();
+  document.getElementById("summary").textContent = summaryText();
+  document.getElementById("result").classList.add("show");
+  core.classList.remove("pulse"); void core.getBBox(); core.classList.add("pulse");
+});
+document.getElementById("copyBtn").addEventListener("click", async e => {
+  const b = e.currentTarget;
+  try { await navigator.clipboard.writeText(summaryText()); b.textContent = "Copied"; }
+  catch { b.textContent = "Copy not allowed here"; }
+  setTimeout(() => b.textContent = "Copy combination", 1600);
+});
+document.getElementById("resetBtn").addEventListener("click", () => {
+  document.getElementById("result").classList.remove("show");
+  state.forEach(s => { s.moved = false; });
+  wasDone = false; activeStep(0);
+});
+
+// Initial position: centre whichever segment is nearest the pointer
+rings.forEach((r, ri) => { state[ri].rot = 0; state[ri].rot = -offTop(ri); render(ri); state[ri].rot = state[ri].rot; });
+// keep reset target consistent with the snapped start
+const startRots = state.map(s => s.rot);
+document.getElementById("resetBtn").addEventListener("click", () => state.forEach((s, i) => animateTo(i, startRots[i], 450)));
+activeStep(0); updateForm();
+})();
+</script>
+</body>
+</html>
